@@ -19,8 +19,8 @@ import {
 import { processArticle, detectLanguage } from './services/aiService';
 
 export const App: React.FC = () => {
-  // Default sample (Kerala Rain Alert)
-  const defaultSample = SAMPLE_ARTICLES[0];
+  // Default sample: Kottayam Water Monitoring System (English)
+  const defaultSample = SAMPLE_ARTICLES.find(s => s.id === 'kottayam-water-monitoring') || SAMPLE_ARTICLES[0];
 
   const [articleText, setArticleText] = useState<string>(defaultSample.text);
   const [selectedLanguage, setSelectedLanguage] = useState<SupportedLanguage>('auto');
@@ -40,8 +40,8 @@ export const App: React.FC = () => {
   const [keywords, setKeywords] = useState<string[]>([
     ...defaultSample.expectedResult.keywords
   ]);
-  const [sourceLang, setSourceLang] = useState<'malayalam' | 'english'>('malayalam');
-  const [targetLang, setTargetLang] = useState<'malayalam' | 'english'>('english');
+  const [sourceLang, setSourceLang] = useState<'malayalam' | 'english'>('english');
+  const [targetLang, setTargetLang] = useState<'malayalam' | 'english'>('malayalam');
   const [reviewStatus, setReviewStatus] = useState<ReviewStatus>('Pending Review');
   const [processingEngine, setProcessingEngine] = useState<'demo-heuristics' | 'gemini-live-ai'>('demo-heuristics');
 
@@ -67,7 +67,7 @@ export const App: React.FC = () => {
 
   // Handle Load Malayalam Sample
   const handleLoadSampleMalayalam = () => {
-    const sample = SAMPLE_ARTICLES[0];
+    const sample = SAMPLE_ARTICLES.find(s => s.id === 'kerala-rain-alert') || SAMPLE_ARTICLES[1];
     setArticleText(sample.text);
     setSelectedLanguage('malayalam');
     setSourceLang('malayalam');
@@ -82,9 +82,9 @@ export const App: React.FC = () => {
     setErrorMessage(null);
   };
 
-  // Handle Load English Sample
+  // Handle Load English Sample (Kottayam Water Monitoring)
   const handleLoadSampleEnglish = () => {
-    const sample = SAMPLE_ARTICLES[1];
+    const sample = SAMPLE_ARTICLES.find(s => s.id === 'kottayam-water-monitoring') || SAMPLE_ARTICLES[0];
     setArticleText(sample.text);
     setSelectedLanguage('english');
     setSourceLang('english');
@@ -153,7 +153,7 @@ export const App: React.FC = () => {
     setEnglishContent(prev => ({ ...prev, [field]: val }));
   };
 
-  // Build reactive JSON payload
+  // Build reactive JSON payload matching Section 4 specification
   const currentJsonPayload: NewsroomJSONOutput = useMemo(() => {
     return {
       sourceLanguage: sourceLang,
@@ -193,7 +193,7 @@ export const App: React.FC = () => {
       <Header
         isDemoMode={!apiKey}
         onOpenSettings={() => setIsSettingsOpen(true)}
-        onResetToSample={handleLoadSampleMalayalam}
+        onResetToSample={handleLoadSampleEnglish}
       />
 
       {/* Main Single Workflow Container */}

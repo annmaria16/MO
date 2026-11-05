@@ -18,7 +18,7 @@ export const AIProcessingStage: React.FC<AIProcessingStageProps> = ({
 }) => {
   return (
     <div className="bg-white rounded-2xl border border-slate-200 shadow-xs p-5 sm:p-6 transition-all">
-      
+
       {/* Stage Header */}
       <div className="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-slate-100">
         <div>
@@ -38,11 +38,10 @@ export const AIProcessingStage: React.FC<AIProcessingStageProps> = ({
         {/* Engine status indicator */}
         <div className="flex items-center space-x-2">
           <span
-            className={`inline-flex items-center space-x-1.5 px-3 py-1 rounded-full text-xs font-bold ${
-              isDemoMode
+            className={`inline-flex items-center space-x-1.5 px-3 py-1 rounded-full text-xs font-bold ${isDemoMode
                 ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
                 : 'bg-indigo-50 text-indigo-800 border border-indigo-200'
-            }`}
+              }`}
           >
             <span className="w-2 h-2 rounded-full bg-current" />
             <span>{isDemoMode ? 'Demo Mode (Illustrative Results)' : 'Gemini 1.5 Flash Active'}</span>
@@ -71,9 +70,9 @@ export const AIProcessingStage: React.FC<AIProcessingStageProps> = ({
       ) : (
         /* Completed Pipeline Breakdown */
         <div className="mt-4 space-y-3">
-          
+
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-            
+
             {/* Step 1: Language Detection */}
             <div className="p-3 rounded-xl border border-slate-100 bg-slate-50 flex items-center space-x-3">
               <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
@@ -138,3 +137,4 @@ export const AIProcessingStage: React.FC<AIProcessingStageProps> = ({
     </div>
   );
 };
+
