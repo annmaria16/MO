@@ -8,226 +8,153 @@
 
 ## 1. Executive Summary
 
-**NewsBridge AI** is a specialized, responsive digital newsroom assistant concept engineered for **Malayala Manorama / Manorama Online**. It addresses the daily multilingual editorial workflow challenges of regional journalism: rapidly detecting, translating, editing, summarizing, and packaging news content between **Malayalam** and **English** for multi-channel digital publishing.
-
-The interface simulates an editorial desk where journalists can process incoming field reports or wire copy, instantly obtain validated headlines within strict broadcast/print character constraints, preview how the story looks across four distinct publishing formats (Web, TV Broadcast, Print Newspaper, and Mobile App), monitor a live breaking news ticker, and export standards-compliant structured JSON payloads ready for downstream CMS integration.
-
----
-
-## 2. Key Features
-
-1. **Source-Language Detection & Routing**
-   - Heuristic Unicode script analysis and automatic detection between Malayalam (`\u0D00-\u0D7F`) and English.
-   - Manual override options (`Auto Detect`, `Malayalam`, `English`).
-
-2. **Bilingual Editorial Processing**
-   - Bidirectional translation between Malayalam and English.
-   - High-impact headline generation tailored for digital news portals and broadcast lower-thirds.
-   - Concise journalistic lead summaries capturing core facts (who, what, where, when, why).
-   - Full editable translated body copy.
-
-3. **Active Character Limit Enforcement**
-   - Configurable headline character limits (`40`, `50`, `60`, `70`, `80`, `100` characters).
-   - Real-time character count indicators with visual warnings and remaining budget.
-   - Non-destructive validation: headlines are never silently truncated, empowering journalists to make editorial refinements.
-
-4. **Multi-Channel Digital Publication Previews**
-   - **🌐 Online News Website Preview:** Authentic Manorama Online layout featuring section tags, breaking headline ticker, editorial photo banner, timestamp, byline, summary callout, and read actions.
-   - **📺 TV Bulletin Preview:** Broadcast control room monitor with live bug (`LIVE ●`), studio backdrop, `TOP 5 NEWS` bulletin side widget, and lower-third breaking news banner.
-   - **📰 Print Newspaper Preview:** Traditional Malayala Manorama daily broadsheet layout with print texture, masthead, edition metadata, multi-column justified typography, and archival photo framing.
-   - **📱 Mobile App View:** Smartphone viewport mockup simulating the Manorama Online mobile reader experience.
-
-5. **Live Scrolling Breaking News Ticker**
-   - Continuous marquee ticker displaying the active headline.
-   - Direct Malayalam (`മലയാളം`) and English (`English`) language toggle.
-   - Interactive play/pause toggle (`⏸` / `▶`) for editorial review.
-   - Immediate reactive updates whenever the headline is edited.
-
-6. **Named Entity Recognition (NER) & Keyword Extraction**
-   - Categorized extraction of **People**, **Places**, and **Organisations**.
-   - Important topical tags/keywords (`#Rain`, `#Kerala`, `#IMD`, `#WaterMetro`).
-
-7. **Standardized JSON Publishing Export**
-   - Formatted JSON output strictly conforming to the assessment schema specification.
-   - One-click **Copy JSON** with visual confirmation.
-   - **Download JSON** payload file (`newsbridge-publish-<timestamp>.json`).
-   - Editorial workflow review status selector (`pending`, `approved`, `rejected`) that synchronizes immediately with the JSON output.
-
-8. **Deterministic Demo Mode & Secure Gemini AI Integration**
-   - Zero-dependency **Demo Mode** enabled out of the box with realistic Malayalam and English newsroom samples.
-   - Optional, client-safe Google Gemini API integration (stored strictly in memory/sessionStorage; zero secrets in Git or client bundles).
-
----
-
-## 3. Technology Stack
-
-- **Framework:** [React 18](https://react.dev/) with [TypeScript](https://www.typescriptlang.org/)
-- **Bundler & Dev Server:** [Vite 5](https://vitejs.dev/)
-- **Styling:** [Tailwind CSS 3](https://tailwindcss.com/) with custom Manorama editorial color palette and typography
-- **Typography:** Google Fonts preloaded with *Inter*, *Anek Malayalam*, *Noto Sans Malayalam*, *Merriweather*, and *Playfair Display*
-- **Icons:** [Lucide React](https://lucide.dev/)
-- **Testing:** Node.js automated ESM test suite (`src/tests/verify.mjs`)
-
----
-
-## 4. Architecture & Component Structure
+**NewsBridge AI** is an editorial newsroom assistant concept engineered for **Malayala Manorama / Manorama Online**. Redesigned around a linear, intuitive editorial workflow, it eliminates cluttered multi-panel dashboards in favor of five clearly numbered sequential stages:
 
 ```
-c:/Users/HP/Documents/online/
-├── public/
-│   └── favicon.svg               # Brand newsroom vector icon
-├── src/
-│   ├── components/
-│   │   ├── Header.tsx            # NewsBridge AI brand identity & status indicators
-│   │   ├── ArticleInput.tsx      # News input textarea, language switcher & sample loaders
-│   │   ├── BilingualResults.tsx  # Side-by-side editable cards with character validation
-│   │   ├── KeyInformation.tsx    # Entities (People, Places, Orgs) and keyword tags
-│   │   ├── NewsTicker.tsx        # Smooth marquee ticker with play/pause and language switch
-│   │   ├── PublicationPreview.tsx# 4-in-1 format preview (Web, TV Bulletin, Print, Mobile)
-│   │   ├── PreviewGallery.tsx    # Bottom 4-format interactive selection gallery
-│   │   ├── JsonExport.tsx        # Standardized publishing payload viewer, copy & download
-│   │   └── SettingsModal.tsx     # Session-based Gemini AI key config & character limit defaults
-│   ├── data/
-│   │   └── sampleArticles.ts     # Curated Malayalam & English newsroom demonstration copy
-│   ├── services/
-│   │   └── aiService.ts          # Core service functions: detection, translation, NER & Gemini connector
-│   ├── tests/
-│   │   └── verify.mjs            # Automated verification test suite
-│   ├── types/
-│   │   └── index.ts              # Strict TypeScript interfaces and schemas
-│   ├── App.tsx                   # Central newsroom workspace orchestrator
-│   ├── index.css                 # Tailwind directives, animations & Malayalam font rules
-│   └── main.tsx                  # Application bootstrap entry point
-├── package.json
-├── tsconfig.json
-├── tailwind.config.js
-├── vite.config.ts
-└── README.md
+[1. INPUT ARTICLE] → [2. AI PROCESSING] → [3. REVIEW & EDIT] → [4. PUBLISHING PREVIEWS] → [5. JSON EXPORT]
 ```
+
+A first-time user can immediately enter wire copy or reporter dispatches in English or Malayalam, inspect the bidirectional AI processing pipeline, review and edit headlines and summaries side-by-side with character limit constraints, preview how the story looks across **five realistic publication formats** using exact official Manorama logos, monitor a live breaking news ticker, and export standards-compliant publishing JSON.
 
 ---
 
-## 5. Getting Started & Local Installation
+## 2. Redesigned Workflow Stages
+
+### Stage 1 — Enter Your News Article
+- Clean, prominent headline and large article input textarea.
+- Automatic script detection with manual override options (`Auto Detect`, `English`, `Malayalam`).
+- Live word and character counting (`words • characters`).
+- Quick-load buttons for curated demonstration articles:
+  - **Sample English:** Kochi Water Metro fleet expansion.
+  - **Sample Malayalam:** Kerala Monsoon yellow weather alert.
+- Clear button and prominent **"Analyse & Translate Article"** action trigger.
+
+### Stage 2 — AI Processing Engine
+- Visual state transition during automated pipeline execution.
+- Four distinct analysis milestones:
+  1. Source Language Detection (`Malayalam` ↔ `English`)
+  2. Bidirectional Machine Translation
+  3. Constrained Headline & Summary Crafting
+  4. Named Entity Recognition (NER) & Topical Keyword Indexing
+- Transparent **Demo Mode** indicator clarifying that output is generated locally for demonstration purposes unless configured with live Gemini AI credentials.
+
+### Stage 3 — Review & Edit Content (Side-by-Side Editorial Desk)
+- **LEFT Column (English Content):**
+  - Editable Headline with real-time character budget counter and limit validation.
+  - Editable Lead Summary with character length tracking.
+  - Editable Full Article body text.
+  - One-click copy buttons for each field.
+- **RIGHT Column (Malayalam Content):**
+  - Editable Malayalam Headline with Unicode font rendering and character limit validation.
+  - Editable Malayalam Lead Summary.
+  - Editable Malayalam Full Article body.
+  - One-click copy buttons for each field.
+- **Review Status Lifecycle Selector:**
+  - `Pending Review`
+  - `Reviewed`
+  - `Approved for Preview`
+- **Immediate Reactivity:** Any edit made to either headline or article immediately updates all 5 publication previews, the news ticker, and the export JSON.
+
+### Stage 4 — Preview Your News Across Publication Platforms
+Five separate tabs displaying realistic multi-channel publication previews with exact supplied official assets:
+1. **🌐 Online Website:** Uses `public/brand/manorama-online-banner.png` (from `manorama-online.png`), category navigation, breaking strip, hero image, timestamp byline, summary callout box, and social tools.
+2. **📱 Mobile Website:** Uses `manorama-online.png` within an iPhone device frame with status bar, category header, responsive imagery, and quick-read navigation.
+3. **📺 TV Bulletin:** Uses `public/brand/manorama-news.png` within a 16:9 news studio broadcast screen featuring a live bug (`LIVE ●`), broadcast clock, lower-third breaking news banner, and `TOP 5 BULLETINS` sidebar.
+4. **📰 English Newspaper:** Uses the English masthead portion of `public/brand/manorama-newspaper.png` (`manorama-newspaper-en.png`), vintage broadsheet texture, traditional headline serif typography, drop cap, and print columns.
+5. **📰 Malayalam Newspaper:** Uses the Malayalam masthead portion of `public/brand/manorama-newspaper.png` (`manorama-newspaper-ml.png`), Kerala edition styling, proper Malayalam typography, and newspaper columns.
+
+### AI-Extracted Key Information (Secondary Section)
+- Compact, non-distracting metadata index.
+- Extracted **People**, **Places**, **Organisations**, and **Keywords & Tags**.
+
+### Stage 5 — Export Publishing JSON
+- Strict Section 12 JSON schema compliance with synchronized review status.
+- One-click **Copy JSON** with confirmation toast.
+- **Download JSON** payload file (`newsbridge-publish-<timestamp>.json`).
+- Collapsible/expandable syntax preview.
+
+### Live Scrolling News Ticker
+- Continuous marquee ticker displaying the active edited headline.
+- Language switcher (`മലയാളം` | `English`).
+- Pause and resume controls (`⏸` / `▶`).
+- Real-time updates as the journalist edits content.
+
+---
+
+## 3. Exact Official Brand Assets
+
+All brand assets are preserved in their original pixel dimensions and aspect ratios inside `public/brand/`:
+
+| Publication Platform | Asset File | Source |
+| :--- | :--- | :--- |
+| **Online Website Preview** | `public/brand/manorama-online-banner.png` | Cropped banner from supplied `manorama-online.png` |
+| **Mobile Website Preview** | `public/brand/manorama-online-banner.png` | Cropped banner from supplied `manorama-online.png` |
+| **TV Bulletin Preview** | `public/brand/manorama-news.png` | Supplied Manorama News broadcast channel logo |
+| **English Newspaper Preview** | `public/brand/manorama-newspaper-en.png` | English masthead cropped from supplied `manorama-newspaper.png` |
+| **Malayalam Newspaper Preview** | `public/brand/manorama-newspaper-ml.png` | Malayalam masthead cropped from supplied `manorama-newspaper.png` |
+
+---
+
+## 4. Technology Stack
+
+- **Frontend:** React 18 with TypeScript
+- **Tooling & Bundler:** Vite 5
+- **Styling:** Tailwind CSS 3 (Newspaper white, editorial red, charcoal, slate)
+- **Typography:** Google Fonts (`Inter`, `Anek Malayalam`, `Noto Sans Malayalam`, `Merriweather`, `Playfair Display`)
+- **Icons:** Lucide React
+- **Verification:** Automated Node.js ESM test suite (`src/tests/verify.mjs`)
+
+---
+
+## 5. Local Setup & Execution
 
 ### Prerequisites
-- Node.js (version 18.0.0 or higher; tested on Node v24.16.0)
-- npm or pnpm
+- Node.js (v18.0.0 or higher; tested on Node v24.16.0)
+- npm
 
-### Installation Steps
+### Instructions
 
-1. **Clone or navigate to the repository:**
+1. **Navigate to the workspace:**
    ```bash
    cd c:/Users/HP/Documents/online
    ```
-
 2. **Install dependencies:**
    ```bash
    npm install
    ```
-
-3. **Start local development server:**
+3. **Run development server:**
    ```bash
    npm run dev
    ```
-   Open `http://localhost:5173` in your browser.
-
-4. **Run the automated test suite:**
+   Open `http://localhost:5173` in your web browser.
+4. **Execute verification test suite:**
    ```bash
    npm test
    ```
-
 5. **Build for production:**
    ```bash
    npm run build
    ```
-   The production-ready bundle will be compiled to `dist/`.
 
 ---
 
-## 6. AI Processing & Demo Mode Architecture
+## 6. Verification & Test Results
 
-### Out-of-the-Box Demo Mode (Zero Credentials Required)
-To ensure the application is immediately testable and 100% reliable during intern assessment demonstrations without requiring external cloud accounts or billing:
-- **Heuristic Language Detection:** Analyzes the proportion of Unicode Malayalam script characters (`[\u0D00-\u0D7F]`) relative to non-whitespace tokens.
-- **Curated High-Fidelity Samples:** Includes realistic Kerala news stories (e.g., IMD Monsoon Yellow Alert, Kochi Water Metro Expansion, ISRO Gaganyaan Safety Test) with meticulously reviewed journalistic Malayalam and English copy.
-- **Local Fallback Heuristics:** For custom journalist input entered during demo mode, deterministic rule-based sentence segmentation and regional entity/keyword extractors operate locally. Demo outputs are transparently labeled with `Demo Mode` badges so assessors know precisely what is running.
-
-### Optional Live Gemini AI Integration
-If live neural translation and generative capabilities are desired:
-1. Click the **Settings** gear icon in the header.
-2. Enter a valid Google Gemini API key (e.g. from Google AI Studio).
-3. The key is stored **exclusively in temporary browser session memory (`sessionStorage`)** and is never written to disk, sent to external servers, or committed to Git.
-4. When configured, NewsBridge AI leverages Google's `gemini-1.5-flash` model with temperature 0.2 to preserve factual accuracy, dates, named entities, and numbers without hallucination.
-
----
-
-## 7. Structured JSON Publishing Schema (Section 12 Compliance)
-
-The application outputs valid, structured JSON formatted according to the assessment specification:
-
-```json
-{
-  "sourceLanguage": "malayalam",
-  "translatedLanguage": "english",
-  "english": {
-    "headline": "Heavy Rain Likely in Kerala Soon: Yellow Alert Issued",
-    "summary": "The India Meteorological Department (IMD) has issued a yellow alert across multiple districts of Kerala anticipating heavy rainfall.",
-    "article": "Heavy rainfall accompanied by thunderstorms is very likely to lash Kerala over the next four days..."
-  },
-  "malayalam": {
-    "headline": "സംസ്ഥാനത്ത് ശക്തമായ മഴയ്ക്ക് സാധ്യത",
-    "summary": "കാലാവസ്ഥാ വകുപ്പ് വിവിധ ജില്ലകളിൽ യെല്ലോ അലർട്ട് പ്രഖ്യാപിച്ചു. മലയോര, തീരദേശ മേഖലകളിൽ ജാഗ്രതാ നിർദ്ദേശം നൽകി.",
-    "article": "സംസ്ഥാനത്ത് വരും ദിവസങ്ങളിൽ ശക്തമായ മഴയ്ക്ക് സാധ്യതയെന്ന് കാലാവസ്ഥാ വകുപ്പ് അറിയിച്ചു..."
-  },
-  "entities": {
-    "people": [
-      "K. Santhosh (IMD Director)",
-      "Pinarayi Vijayan (Chief Minister)"
-    ],
-    "places": [
-      "Kerala",
-      "Idukki",
-      "Wayanad",
-      "Kozhikode",
-      "Pathanamthitta",
-      "Arabian Sea"
-    ],
-    "organisations": [
-      "IMD (India Meteorological Department)",
-      "SDMA (State Disaster Management Authority)"
-    ]
-  },
-  "keywords": [
-    "Rain",
-    "Kerala",
-    "Yellow Alert",
-    "Weather",
-    "Monsoon",
-    "IMD"
-  ],
-  "reviewStatus": "pending"
-}
-```
+Run `npm test` to execute the automated verification suite:
+- ✅ Exact brand asset files exist in `public/brand/`
+- ✅ Malayalam script detection verified
+- ✅ English text detection verified
+- ✅ Empty text handling verified
+- ✅ Headline within-limit validation verified
+- ✅ Headline over-limit warning verified
+- ✅ Section 12 JSON schema structure verified
+- ✅ Review status options (`Pending Review`, `Reviewed`, `Approved for Preview`) verified
+- ✅ JSON serialization and parsing verified
+- ✅ All 5 publication preview platforms verified
 
 ---
 
-## 8. Assumptions & Design Decisions
+## 7. Assessment Context
 
-1. **Brand Context:** The user interface adheres strictly to the brand identity instructions: red, charcoal, and white color scheme; the exact tagline *"A smarter bridge from newsroom to reader."*; contextual label *"Newsroom workflow concept for Manorama Online"*; and no competitor branding or unsupported claims.
-2. **Reactivity:** Any edit made to the Malayalam or English headlines immediately updates the publication preview, the live news ticker, character counters, and the generated JSON payload.
-3. **No Heavy Backend Needed:** To keep the assessment self-contained, light, and easy to run on any machine without database or Docker dependencies, state management and business logic are cleanly organized inside React and modular TypeScript service layers.
-
----
-
-## 9. Known Limitations & Future Roadmap
-
-- **Audio/Speech Synthesis:** Future iterations could incorporate Malayalam text-to-speech (TTS) for automated voiceover generation in TV bulletin clips.
-- **CMS Direct Webhook:** Adding direct REST API or GraphQL integration to push approved JSON payloads straight into Manorama Online's editorial CMS.
-- **Dialect & Stylebook Checking:** Integrating custom Malayala Manorama orthography rules and stylebook guidelines for standardizing Malayalam spelling and terminology across regional bureaux.
-
----
-
-## 10. License & Assessment Attribution
-
-Created as a technical assessment submission for the Software Engineer Intern role at Malayala Manorama / Manorama Online.
-All trademarks and brand names belong to their respective holders and are referenced strictly for academic and assessment concept demonstration purposes.
+Built as a technical assessment submission for the Software Engineer Intern role at Malayala Manorama / Manorama Online.
+NewsBridge AI remains a conceptual newsroom assistant tool and does not claim to be an officially released product of Malayala Manorama.

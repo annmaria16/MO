@@ -1,32 +1,33 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Header } from './components/Header';
 import { ArticleInput } from './components/ArticleInput';
+import { AIProcessingStage } from './components/AIProcessingStage';
 import { BilingualResults } from './components/BilingualResults';
-import { KeyInformation } from './components/KeyInformation';
 import { PublicationPreview } from './components/PublicationPreview';
-import { NewsTicker } from './components/NewsTicker';
-import { PreviewGallery } from './components/PreviewGallery';
+import { KeyInformation } from './components/KeyInformation';
 import { JsonExport } from './components/JsonExport';
+import { NewsTicker } from './components/NewsTicker';
 import { SettingsModal } from './components/SettingsModal';
 import { SAMPLE_ARTICLES } from './data/sampleArticles';
 import {
   SupportedLanguage,
   NewsroomJSONOutput,
   BilingualContent,
-  PreviewTab
+  PreviewTab,
+  ReviewStatus
 } from './types';
 import { processArticle, detectLanguage } from './services/aiService';
 
 export const App: React.FC = () => {
-  // Default to first realistic sample (Kerala Monsoon Yellow Alert)
+  // Default sample (Kerala Rain Alert)
   const defaultSample = SAMPLE_ARTICLES[0];
 
   const [articleText, setArticleText] = useState<string>(defaultSample.text);
   const [selectedLanguage, setSelectedLanguage] = useState<SupportedLanguage>('auto');
   const [headlineLimit, setHeadlineLimit] = useState<number>(60);
-  const [activePreviewTab, setActivePreviewTab] = useState<PreviewTab>('website');
+  const [activePreviewTab, setActivePreviewTab] = useState<PreviewTab>('online');
 
-  // AI Results state
+  // AI Content State
   const [malayalamContent, setMalayalamContent] = useState<BilingualContent>({
     ...defaultSample.expectedResult.malayalam
   });
@@ -41,10 +42,10 @@ export const App: React.FC = () => {
   ]);
   const [sourceLang, setSourceLang] = useState<'malayalam' | 'english'>('malayalam');
   const [targetLang, setTargetLang] = useState<'malayalam' | 'english'>('english');
-  const [reviewStatus, setReviewStatus] = useState<'pending' | 'approved' | 'rejected'>('pending');
+  const [reviewStatus, setReviewStatus] = useState<ReviewStatus>('Pending Review');
   const [processingEngine, setProcessingEngine] = useState<'demo-heuristics' | 'gemini-live-ai'>('demo-heuristics');
 
-  // Processing & error states
+  // Processing & Error states
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -54,12 +55,12 @@ export const App: React.FC = () => {
     return sessionStorage.getItem('newsbridge_gemini_key') || '';
   });
 
-  // Current active sample meta (for photos)
+  // Sample metadata
   const [currentCategory, setCurrentCategory] = useState<string>(defaultSample.category);
   const [currentImageUrl, setCurrentImageUrl] = useState<string>(defaultSample.imageUrl || '');
   const [currentCaption, setCurrentCaption] = useState<string>(defaultSample.imageCaption || '');
 
-  // Detect language dynamically as user types
+  // Detect script dynamically
   const autoDetectedLang = useMemo(() => {
     return detectLanguage(articleText);
   }, [articleText]);
@@ -98,13 +99,13 @@ export const App: React.FC = () => {
     setErrorMessage(null);
   };
 
-  // Handle Clear Input
+  // Clear Input
   const handleClearInput = () => {
     setArticleText('');
     setErrorMessage(null);
   };
 
-  // Handle Analyse & Translate
+  // Analyse & Translate Trigger
   const handleAnalyse = async () => {
     if (!articleText.trim()) {
       setErrorMessage('Please enter or select a news article before analysing.');
@@ -143,7 +144,7 @@ export const App: React.FC = () => {
     }
   };
 
-  // Updates from interactive bilingual editor
+  // Immediate edits from Review & Edit Stage
   const handleUpdateMalayalam = (field: keyof BilingualContent, val: string) => {
     setMalayalamContent(prev => ({ ...prev, [field]: val }));
   };
@@ -152,7 +153,7 @@ export const App: React.FC = () => {
     setEnglishContent(prev => ({ ...prev, [field]: val }));
   };
 
-  // Build reactive JSON payload matching Section 12
+  // Build reactive JSON payload
   const currentJsonPayload: NewsroomJSONOutput = useMemo(() => {
     return {
       sourceLanguage: sourceLang,
@@ -186,93 +187,132 @@ export const App: React.FC = () => {
   ]);
 
   return (
-    <div className="min-h-screen bg-[#F4F6F9] text-slate-800 flex flex-col font-sans">
+    <div className="min-h-screen bg-[#F8FAFC] text-slate-800 flex flex-col font-sans">
       
-      {/* 1. Header */}
+      {/* Brand Header */}
       <Header
         isDemoMode={!apiKey}
         onOpenSettings={() => setIsSettingsOpen(true)}
         onResetToSample={handleLoadSampleMalayalam}
       />
 
-      {/* Main Newsroom Workspace Container */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-5 space-y-5">
+      {/* Main Single Workflow Container */}
+      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-7 space-y-7">
         
-        {/* Top Split Area: Left Input/Results & Right Previews/KeyInfo */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch">
-          
-          {/* ============================================================ */}
-          {/* LEFT COLUMN: Input & Bilingual Results (7 cols on desktop) */}
-          {/* ============================================================ */}
-          <div className="lg:col-span-7 flex flex-col space-y-5">
+        {/* Workflow Visual Stepper Bar */}
+        <div className="bg-white border border-slate-200 rounded-2xl p-3 sm:p-4 shadow-xs">
+          <div className="flex items-center justify-between overflow-x-auto text-xs font-bold text-slate-600 space-x-2 sm:space-x-4">
             
-            {/* Article Input */}
-            <ArticleInput
-              articleText={articleText}
-              setArticleText={setArticleText}
-              selectedLanguage={selectedLanguage}
-              setSelectedLanguage={setSelectedLanguage}
-              detectedLanguage={autoDetectedLang}
-              onLoadSampleMalayalam={handleLoadSampleMalayalam}
-              onLoadSampleEnglish={handleLoadSampleEnglish}
-              onClear={handleClearInput}
-              onAnalyse={handleAnalyse}
-              isProcessing={isProcessing}
-              errorMessage={errorMessage}
-            />
-
-            {/* AI Results & Interactive Bilingual Editor */}
-            <BilingualResults
-              malayalam={malayalamContent}
-              english={englishContent}
-              onUpdateMalayalam={handleUpdateMalayalam}
-              onUpdateEnglish={handleUpdateEnglish}
-              headlineLimit={headlineLimit}
-              setHeadlineLimit={setHeadlineLimit}
-            />
-
-          </div>
-
-          {/* ============================================================ */}
-          {/* RIGHT COLUMN: Publication Preview & Metadata (5 cols) */}
-          {/* ============================================================ */}
-          <div className="lg:col-span-5 flex flex-col space-y-5">
+            <div className="flex items-center space-x-2 text-manorama-red shrink-0">
+              <span className="w-6 h-6 rounded-full bg-manorama-red text-white flex items-center justify-center text-xs font-black">1</span>
+              <span>Input Article</span>
+            </div>
             
-            {/* Publication Preview Card */}
-            <div className="flex-1 min-h-[380px]">
-              <PublicationPreview
-                activeTab={activePreviewTab}
-                setActiveTab={setActivePreviewTab}
-                malayalam={malayalamContent}
-                english={englishContent}
-                category={currentCategory}
-                imageUrl={currentImageUrl}
-                imageCaption={currentCaption}
-              />
+            <span className="text-slate-300">→</span>
+
+            <div className="flex items-center space-x-2 text-slate-800 shrink-0">
+              <span className="w-6 h-6 rounded-full bg-slate-100 border border-slate-300 text-slate-700 flex items-center justify-center text-xs font-black">2</span>
+              <span>AI Processing</span>
             </div>
 
-            {/* Key Information & Export Results */}
-            <div className="grid grid-cols-1 sm:grid-cols-1 gap-5">
-              <KeyInformation
-                entities={entities}
-                keywords={keywords}
-                isDemoEngine={processingEngine === 'demo-heuristics'}
-              />
+            <span className="text-slate-300">→</span>
 
-              <JsonExport
-                jsonData={currentJsonPayload}
-                onUpdateReviewStatus={setReviewStatus}
-              />
+            <div className="flex items-center space-x-2 text-slate-800 shrink-0">
+              <span className="w-6 h-6 rounded-full bg-slate-100 border border-slate-300 text-slate-700 flex items-center justify-center text-xs font-black">3</span>
+              <span>Review & Edit</span>
+            </div>
+
+            <span className="text-slate-300">→</span>
+
+            <div className="flex items-center space-x-2 text-slate-800 shrink-0">
+              <span className="w-6 h-6 rounded-full bg-slate-100 border border-slate-300 text-slate-700 flex items-center justify-center text-xs font-black">4</span>
+              <span>Publishing Previews</span>
+            </div>
+
+            <span className="text-slate-300">→</span>
+
+            <div className="flex items-center space-x-2 text-slate-800 shrink-0">
+              <span className="w-6 h-6 rounded-full bg-slate-100 border border-slate-300 text-slate-700 flex items-center justify-center text-xs font-black">5</span>
+              <span>JSON Export</span>
             </div>
 
           </div>
-
         </div>
 
-        {/* ============================================================ */}
-        {/* MIDDLE SECTION: Live Scrolling Breaking News Ticker */}
-        {/* ============================================================ */}
-        <section className="pt-1">
+        {/* STAGE 1: Article Input */}
+        <section id="stage-1-input">
+          <ArticleInput
+            articleText={articleText}
+            setArticleText={setArticleText}
+            selectedLanguage={selectedLanguage}
+            setSelectedLanguage={setSelectedLanguage}
+            detectedLanguage={autoDetectedLang}
+            onLoadSampleMalayalam={handleLoadSampleMalayalam}
+            onLoadSampleEnglish={handleLoadSampleEnglish}
+            onClear={handleClearInput}
+            onAnalyse={handleAnalyse}
+            isProcessing={isProcessing}
+            errorMessage={errorMessage}
+          />
+        </section>
+
+        {/* STAGE 2: AI Processing State & Architecture */}
+        <section id="stage-2-processing">
+          <AIProcessingStage
+            isProcessing={isProcessing}
+            isDemoMode={!apiKey}
+            sourceLanguage={sourceLang}
+            targetLanguage={targetLang}
+            hasProcessed={true}
+          />
+        </section>
+
+        {/* STAGE 3: Review & Edit (Side-by-Side English & Malayalam) */}
+        <section id="stage-3-review-edit">
+          <BilingualResults
+            malayalam={malayalamContent}
+            english={englishContent}
+            onUpdateMalayalam={handleUpdateMalayalam}
+            onUpdateEnglish={handleUpdateEnglish}
+            headlineLimit={headlineLimit}
+            setHeadlineLimit={setHeadlineLimit}
+            reviewStatus={reviewStatus}
+            setReviewStatus={setReviewStatus}
+          />
+        </section>
+
+        {/* STAGE 4: Publication Previews (5 Tabs with Exact Logos) */}
+        <section id="stage-4-previews">
+          <PublicationPreview
+            activeTab={activePreviewTab}
+            setActiveTab={setActivePreviewTab}
+            malayalam={malayalamContent}
+            english={englishContent}
+            category={currentCategory}
+            imageUrl={currentImageUrl}
+            imageCaption={currentCaption}
+          />
+        </section>
+
+        {/* COMPACT SECONDARY: AI-Extracted Key Information */}
+        <section id="stage-entities-metadata">
+          <KeyInformation
+            entities={entities}
+            keywords={keywords}
+            isDemoEngine={processingEngine === 'demo-heuristics'}
+          />
+        </section>
+
+        {/* STAGE 5: Structured JSON Export */}
+        <section id="stage-5-export">
+          <JsonExport
+            jsonData={currentJsonPayload}
+            onUpdateReviewStatus={setReviewStatus}
+          />
+        </section>
+
+        {/* LIVE SCROLLING NEWS TICKER */}
+        <section id="stage-news-ticker" className="pt-2">
           <NewsTicker
             malayalamHeadline={malayalamContent.headline}
             englishHeadline={englishContent.headline}
@@ -280,40 +320,18 @@ export const App: React.FC = () => {
           />
         </section>
 
-        {/* ============================================================ */}
-        {/* BOTTOM SECTION: Multi-Channel Publication Preview Gallery */}
-        {/* ============================================================ */}
-        <section className="space-y-2">
-          <div className="flex items-center justify-between px-1">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500">
-              Multi-Channel Digital Publication Suite
-            </h3>
-            <span className="text-xs text-slate-400">
-              Select any format to preview in full resolution
-            </span>
-          </div>
-
-          <PreviewGallery
-            activeTab={activePreviewTab}
-            setActiveTab={setActivePreviewTab}
-            malayalam={malayalamContent}
-            english={englishContent}
-            imageUrl={currentImageUrl}
-          />
-        </section>
-
       </main>
 
-      {/* Newsroom Editorial Footer */}
-      <footer className="mt-8 border-t border-slate-200 bg-white py-4 text-center text-xs text-slate-500">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-2">
+      {/* Editorial Newsroom Footer */}
+      <footer className="mt-10 border-t border-slate-200 bg-white py-6 text-center text-xs text-slate-500">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-3">
           <div className="flex items-center space-x-2">
-            <span className="font-bold text-slate-700">NewsBridge AI</span>
+            <span className="font-bold text-slate-800">NewsBridge AI</span>
             <span>—</span>
             <span>A smarter bridge from newsroom to reader.</span>
           </div>
           <div className="text-slate-400 text-[11px]">
-            Technical Assessment Concept • Malayala Manorama / Manorama Online • Powered by React, TypeScript, Vite & Tailwind CSS
+            Manorama Online Software Engineer Intern Technical Assessment • React, TypeScript, Vite & Tailwind CSS
           </div>
         </div>
       </footer>

@@ -1,6 +1,6 @@
 import React from 'react';
 import { PreviewTab, BilingualContent } from '../types';
-import { Globe, Tv, Newspaper, Smartphone, Check } from 'lucide-react';
+import { Globe, Smartphone, Tv, Newspaper, Check } from 'lucide-react';
 
 interface PreviewGalleryProps {
   activeTab: PreviewTab;
@@ -17,140 +17,111 @@ export const PreviewGallery: React.FC<PreviewGalleryProps> = ({
   english,
   imageUrl = 'https://images.unsplash.com/photo-1514632595-4944383f2737?auto=format&fit=crop&w=1200&q=80'
 }) => {
-  const headline = malayalam.headline || english.headline;
-
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
       
-      {/* 1. Website Preview Thumbnail */}
+      {/* 1. Online Website */}
       <div
-        onClick={() => setActiveTab('website')}
-        className={`cursor-pointer rounded-xl border p-3 bg-white transition-all hover:shadow-md ${
-          activeTab === 'website'
-            ? 'border-manorama-red ring-2 ring-manorama-red/20 shadow-sm'
+        onClick={() => setActiveTab('online')}
+        className={`cursor-pointer rounded-xl border p-3 bg-white transition-all hover:shadow-xs ${
+          activeTab === 'online'
+            ? 'border-manorama-red ring-2 ring-manorama-red/20 shadow-xs'
             : 'border-slate-200 hover:border-slate-300'
         }`}
       >
-        <div className="flex items-center justify-between pb-2 mb-2 border-b border-slate-100 text-xs font-bold text-slate-800">
+        <div className="flex items-center justify-between pb-1.5 mb-1.5 border-b border-slate-100 text-xs font-bold text-slate-800">
           <div className="flex items-center space-x-1.5">
             <Globe className="w-3.5 h-3.5 text-manorama-red" />
-            <span>Online News Website</span>
+            <span>Online Website</span>
           </div>
-          {activeTab === 'website' && <Check className="w-3.5 h-3.5 text-manorama-red" />}
+          {activeTab === 'online' && <Check className="w-3.5 h-3.5 text-manorama-red" />}
         </div>
-        
-        {/* Mini Preview Box */}
-        <div className="h-28 rounded-lg overflow-hidden border border-slate-100 bg-slate-50 p-2 flex space-x-2 items-center">
-          <img
-            src={imageUrl}
-            alt="Website card"
-            className="w-16 h-16 rounded object-cover shrink-0"
-          />
-          <div className="flex-1 overflow-hidden">
-            <div className="text-[9px] font-bold text-manorama-red uppercase">Manorama Online</div>
-            <div className="text-[11px] font-bold font-ml line-clamp-2 text-slate-900 mt-0.5">
-              {headline}
-            </div>
-            <div className="text-[9px] text-slate-400 mt-1">Read More →</div>
-          </div>
+        <div className="h-14 rounded-lg overflow-hidden border border-slate-100 bg-slate-50 p-2 flex items-center justify-center">
+          <img src="/brand/manorama-online-banner.png" alt="Online" className="h-5 object-contain" />
         </div>
       </div>
 
-      {/* 2. TV Bulletin Thumbnail */}
-      <div
-        onClick={() => setActiveTab('tv')}
-        className={`cursor-pointer rounded-xl border p-3 bg-white transition-all hover:shadow-md ${
-          activeTab === 'tv'
-            ? 'border-manorama-red ring-2 ring-manorama-red/20 shadow-sm'
-            : 'border-slate-200 hover:border-slate-300'
-        }`}
-      >
-        <div className="flex items-center justify-between pb-2 mb-2 border-b border-slate-100 text-xs font-bold text-slate-800">
-          <div className="flex items-center space-x-1.5">
-            <Tv className="w-3.5 h-3.5 text-manorama-red" />
-            <span>TV Bulletin Preview</span>
-          </div>
-          {activeTab === 'tv' && <Check className="w-3.5 h-3.5 text-manorama-red" />}
-        </div>
-
-        {/* Mini TV Studio Preview */}
-        <div className="h-28 rounded-lg overflow-hidden bg-slate-950 p-2 flex flex-col justify-between text-white relative">
-          <div className="flex items-center justify-between text-[9px]">
-            <span className="bg-red-600 px-1 py-0.5 font-bold rounded">MANORAMA NEWS</span>
-            <span className="text-red-400 font-mono">LIVE ●</span>
-          </div>
-          <div className="text-[11px] font-bold font-ml text-center line-clamp-2 drop-shadow">
-            {headline}
-          </div>
-          <div className="bg-red-700/80 px-1 py-0.5 text-[8px] font-bold truncate">
-            BREAKING: {headline}
-          </div>
-        </div>
-      </div>
-
-      {/* 3. Newspaper Preview Thumbnail */}
-      <div
-        onClick={() => setActiveTab('print')}
-        className={`cursor-pointer rounded-xl border p-3 bg-white transition-all hover:shadow-md ${
-          activeTab === 'print'
-            ? 'border-manorama-red ring-2 ring-manorama-red/20 shadow-sm'
-            : 'border-slate-200 hover:border-slate-300'
-        }`}
-      >
-        <div className="flex items-center justify-between pb-2 mb-2 border-b border-slate-100 text-xs font-bold text-slate-800">
-          <div className="flex items-center space-x-1.5">
-            <Newspaper className="w-3.5 h-3.5 text-manorama-red" />
-            <span>Newspaper Preview</span>
-          </div>
-          {activeTab === 'print' && <Check className="w-3.5 h-3.5 text-manorama-red" />}
-        </div>
-
-        {/* Mini Newspaper texture */}
-        <div className="h-28 rounded-lg overflow-hidden border border-stone-300 newspaper-texture p-2 flex flex-col justify-between">
-          <div className="text-center border-b border-stone-800 pb-0.5">
-            <span className="text-[10px] font-black font-newspaper uppercase text-stone-900 tracking-wider">
-              MALAYALA MANORAMA
-            </span>
-          </div>
-          <div className="text-[10px] font-bold font-ml line-clamp-2 text-stone-950 my-1">
-            {headline}
-          </div>
-          <div className="flex items-center space-x-1 text-[8px] text-stone-600">
-            <div className="w-6 h-6 bg-stone-300 rounded shrink-0"></div>
-            <div className="line-clamp-2">വിവിധ ജില്ലകളിൽ ശക്തമായ മഴ മുന്നറിയിപ്പ്...</div>
-          </div>
-        </div>
-      </div>
-
-      {/* 4. Mobile View Thumbnail */}
+      {/* 2. Mobile Website */}
       <div
         onClick={() => setActiveTab('mobile')}
-        className={`cursor-pointer rounded-xl border p-3 bg-white transition-all hover:shadow-md ${
+        className={`cursor-pointer rounded-xl border p-3 bg-white transition-all hover:shadow-xs ${
           activeTab === 'mobile'
-            ? 'border-manorama-red ring-2 ring-manorama-red/20 shadow-sm'
+            ? 'border-manorama-red ring-2 ring-manorama-red/20 shadow-xs'
             : 'border-slate-200 hover:border-slate-300'
         }`}
       >
-        <div className="flex items-center justify-between pb-2 mb-2 border-b border-slate-100 text-xs font-bold text-slate-800">
+        <div className="flex items-center justify-between pb-1.5 mb-1.5 border-b border-slate-100 text-xs font-bold text-slate-800">
           <div className="flex items-center space-x-1.5">
             <Smartphone className="w-3.5 h-3.5 text-manorama-red" />
-            <span>Mobile View</span>
+            <span>Mobile Website</span>
           </div>
           {activeTab === 'mobile' && <Check className="w-3.5 h-3.5 text-manorama-red" />}
         </div>
+        <div className="h-14 rounded-lg overflow-hidden border border-slate-100 bg-slate-50 p-2 flex items-center justify-center">
+          <span className="text-[10px] font-bold text-slate-600">Mobile Edition</span>
+        </div>
+      </div>
 
-        {/* Mini Mobile Preview */}
-        <div className="h-28 rounded-lg overflow-hidden border-2 border-slate-800 bg-white p-1.5 flex flex-col justify-between shadow-inner">
-          <div className="flex items-center justify-between border-b border-slate-200 pb-0.5">
-            <span className="text-[8px] font-bold text-manorama-red">manorama ONLINE</span>
-            <span className="text-[7px] text-slate-400">9:41</span>
+      {/* 3. TV Bulletin */}
+      <div
+        onClick={() => setActiveTab('tv')}
+        className={`cursor-pointer rounded-xl border p-3 bg-white transition-all hover:shadow-xs ${
+          activeTab === 'tv'
+            ? 'border-manorama-red ring-2 ring-manorama-red/20 shadow-xs'
+            : 'border-slate-200 hover:border-slate-300'
+        }`}
+      >
+        <div className="flex items-center justify-between pb-1.5 mb-1.5 border-b border-slate-100 text-xs font-bold text-slate-800">
+          <div className="flex items-center space-x-1.5">
+            <Tv className="w-3.5 h-3.5 text-manorama-red" />
+            <span>TV Bulletin</span>
           </div>
-          <div className="text-[10px] font-bold font-ml line-clamp-2 text-slate-900">
-            {headline}
+          {activeTab === 'tv' && <Check className="w-3.5 h-3.5 text-manorama-red" />}
+        </div>
+        <div className="h-14 rounded-lg overflow-hidden border border-slate-800 bg-slate-950 p-2 flex items-center justify-center">
+          <img src="/brand/manorama-news.png" alt="TV" className="h-5 object-contain" />
+        </div>
+      </div>
+
+      {/* 4. English Newspaper */}
+      <div
+        onClick={() => setActiveTab('newspaper-en')}
+        className={`cursor-pointer rounded-xl border p-3 bg-white transition-all hover:shadow-xs ${
+          activeTab === 'newspaper-en'
+            ? 'border-manorama-red ring-2 ring-manorama-red/20 shadow-xs'
+            : 'border-slate-200 hover:border-slate-300'
+        }`}
+      >
+        <div className="flex items-center justify-between pb-1.5 mb-1.5 border-b border-slate-100 text-xs font-bold text-slate-800">
+          <div className="flex items-center space-x-1.5">
+            <Newspaper className="w-3.5 h-3.5 text-manorama-red" />
+            <span>English Print</span>
           </div>
-          <div className="bg-manorama-red text-white text-[7px] font-bold text-center py-0.5 rounded">
-            Read on Mobile App →
+          {activeTab === 'newspaper-en' && <Check className="w-3.5 h-3.5 text-manorama-red" />}
+        </div>
+        <div className="h-14 rounded-lg overflow-hidden border border-stone-200 bg-stone-50 p-2 flex items-center justify-center">
+          <img src="/brand/manorama-newspaper-en.png" alt="English Print" className="h-4 object-contain" />
+        </div>
+      </div>
+
+      {/* 5. Malayalam Newspaper */}
+      <div
+        onClick={() => setActiveTab('newspaper-ml')}
+        className={`cursor-pointer rounded-xl border p-3 bg-white transition-all hover:shadow-xs ${
+          activeTab === 'newspaper-ml'
+            ? 'border-manorama-red ring-2 ring-manorama-red/20 shadow-xs'
+            : 'border-slate-200 hover:border-slate-300'
+        }`}
+      >
+        <div className="flex items-center justify-between pb-1.5 mb-1.5 border-b border-slate-100 text-xs font-bold text-slate-800">
+          <div className="flex items-center space-x-1.5">
+            <Newspaper className="w-3.5 h-3.5 text-manorama-red" />
+            <span>മലയാള മനോരമ</span>
           </div>
+          {activeTab === 'newspaper-ml' && <Check className="w-3.5 h-3.5 text-manorama-red" />}
+        </div>
+        <div className="h-14 rounded-lg overflow-hidden border border-stone-200 bg-stone-50 p-2 flex items-center justify-center">
+          <img src="/brand/manorama-newspaper-ml.png" alt="Malayalam Print" className="h-4 object-contain" />
         </div>
       </div>
 

@@ -1,4 +1,4 @@
-import { SupportedLanguage, NewsroomJSONOutput, ExtractedEntities, BilingualContent } from '../types';
+import { SupportedLanguage, NewsroomJSONOutput, ExtractedEntities, BilingualContent, ReviewStatus } from '../types';
 import { SAMPLE_ARTICLES } from '../data/sampleArticles';
 
 /**
@@ -8,7 +8,6 @@ export function detectLanguage(text: string): 'malayalam' | 'english' {
   if (!text || text.trim().length === 0) return 'english';
   const malayalamMatches = text.match(/[\u0D00-\u0D7F]/g);
   const count = malayalamMatches ? malayalamMatches.length : 0;
-  // If more than 10% of characters (excluding spaces) are Malayalam, classify as Malayalam
   const nonWhitespace = text.replace(/\s+/g, '').length;
   if (nonWhitespace > 0 && count / nonWhitespace > 0.1) {
     return 'malayalam';
@@ -39,7 +38,6 @@ export function validateHeadline(headline: string, limit: number = 60): {
 function findMatchingSample(text: string) {
   const cleaned = text.trim().toLowerCase();
   for (const sample of SAMPLE_ARTICLES) {
-    // Check if key phrases match
     if (
       cleaned.includes('മഴയ്ക്ക് സാധ്യത') ||
       cleaned.includes('യെല്ലോ അലർട്ട്') ||
@@ -76,7 +74,6 @@ export function extractEntitiesDemo(text: string, lang: 'malayalam' | 'english')
   const places: Set<string> = new Set();
   const organisations: Set<string> = new Set();
 
-  // Known dictionary entities for Kerala & India newsroom context
   const orgMap: Record<string, string> = {
     'imd': 'IMD (India Meteorological Department)',
     'കാലാവസ്ഥാ': 'കേന്ദ്ര കാലാവസ്ഥാ വകുപ്പ് (IMD)',
@@ -111,34 +108,26 @@ export function extractEntitiesDemo(text: string, lang: 'malayalam' | 'english')
 
   const lower = text.toLowerCase();
 
-  // Match orgs
   Object.keys(orgMap).forEach(key => {
     if (lower.includes(key)) {
       organisations.add(orgMap[key]);
     }
   });
 
-  // Match places
   placeList.forEach(p => {
     if (text.includes(p)) {
       places.add(p);
     }
   });
 
-  // Match people
   peopleList.forEach(p => {
     if (text.includes(p)) {
       people.add(p);
     }
   });
 
-  // Fallback if none detected
-  if (places.size === 0) {
-    places.add('Kerala');
-  }
-  if (organisations.size === 0) {
-    organisations.add('Editorial Newsroom Desk');
-  }
+  if (places.size === 0) places.add('Kerala');
+  if (organisations.size === 0) organisations.add('Newsroom Editorial Desk');
 
   return {
     people: Array.from(people),
@@ -161,7 +150,6 @@ export function extractKeywordsDemo(text: string): string[] {
     .split(/\s+/)
     .filter(w => w.length > 3 && !commonStopWords.has(w.toLowerCase()));
 
-  // Count frequencies
   const freqMap: Record<string, number> = {};
   words.forEach(w => {
     const norm = w.trim();
@@ -254,7 +242,7 @@ Return ONLY a valid JSON object strictly matching this schema with NO markdown f
     "organisations": ["..."]
   },
   "keywords": ["..."],
-  "reviewStatus": "pending"
+  "reviewStatus": "Pending Review"
 }`;
 
   const response = await fetch(
@@ -289,7 +277,6 @@ Return ONLY a valid JSON object strictly matching this schema with NO markdown f
     throw new Error('Empty response received from Gemini API');
   }
 
-  // Parse JSON
   const cleaned = rawText.replace(/```json/g, '').replace(/```/g, '').trim();
   const parsed = JSON.parse(cleaned);
 
@@ -312,7 +299,7 @@ Return ONLY a valid JSON object strictly matching this schema with NO markdown f
       organisations: parsed.entities?.organisations || []
     },
     keywords: parsed.keywords || [],
-    reviewStatus: 'pending',
+    reviewStatus: 'Pending Review',
     metadata: {
       wordCount: {
         english: parsed.english?.article?.split(/\s+/).length || 0,
@@ -356,12 +343,11 @@ export async function processArticle(options: {
       return await callGeminiApi(text, detectedSource, targetLanguage, headlineLimit, apiKey);
     } catch (err: any) {
       console.warn('Gemini API request failed, falling back to deterministic Demo Engine:', err.message);
-      // Fall through to deterministic demo mode
     }
   }
 
   // Simulate network latency for realistic UX
-  await new Promise(res => setTimeout(res, 600));
+  await new Promise(res => setTimeout(res, 500));
 
   // 3. Check for matching sample article
   const matchedSample = findMatchingSample(text);
@@ -373,7 +359,7 @@ export async function processArticle(options: {
       malayalam: { ...matchedSample.expectedResult.malayalam },
       entities: { ...matchedSample.expectedResult.entities },
       keywords: [...matchedSample.expectedResult.keywords],
-      reviewStatus: 'pending',
+      reviewStatus: 'Pending Review',
       metadata: {
         wordCount: {
           english: matchedSample.expectedResult.english.article.split(/\s+/).length,
@@ -426,7 +412,7 @@ export async function processArticle(options: {
     malayalam: malayalamContent,
     entities,
     keywords,
-    reviewStatus: 'pending',
+    reviewStatus: 'Pending Review',
     metadata: {
       wordCount: {
         english: englishContent.article.split(/\s+/).length,

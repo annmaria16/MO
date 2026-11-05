@@ -1,5 +1,7 @@
 export type SupportedLanguage = 'auto' | 'malayalam' | 'english';
 
+export type ReviewStatus = 'Pending Review' | 'Reviewed' | 'Approved for Preview';
+
 export interface BilingualContent {
   headline: string;
   summary: string;
@@ -19,7 +21,7 @@ export interface NewsroomJSONOutput {
   malayalam: BilingualContent;
   entities: ExtractedEntities;
   keywords: string[];
-  reviewStatus: 'pending' | 'approved' | 'rejected';
+  reviewStatus: ReviewStatus;
   metadata?: {
     wordCount: {
       english: number;
@@ -47,4 +49,4 @@ export interface SampleArticle {
   };
 }
 
-export type PreviewTab = 'website' | 'tv' | 'print' | 'mobile';
+export type PreviewTab = 'online' | 'mobile' | 'tv' | 'newspaper-en' | 'newspaper-ml';
