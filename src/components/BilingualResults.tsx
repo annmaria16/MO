@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { BilingualContent, ReviewStatus } from '../types';
-import { Copy, Check, Sliders, AlertTriangle, CheckCircle2, ChevronDown } from 'lucide-react';
+import { Copy, Check, Sliders, AlertTriangle, CheckCircle2, ChevronDown, Sparkles, PenLine, RotateCcw } from 'lucide-react';
+import { generateShorterHeadline } from '../services/aiService';
 
 interface BilingualResultsProps {
   malayalam: BilingualContent;
@@ -11,6 +12,7 @@ interface BilingualResultsProps {
   setHeadlineLimit: (limit: number) => void;
   reviewStatus: ReviewStatus;
   setReviewStatus: (status: ReviewStatus) => void;
+  isDemoMode?: boolean;
 }
 
 export const BilingualResults: React.FC<BilingualResultsProps> = ({
@@ -21,9 +23,14 @@ export const BilingualResults: React.FC<BilingualResultsProps> = ({
   headlineLimit,
   setHeadlineLimit,
   reviewStatus,
-  setReviewStatus
+  setReviewStatus,
+  isDemoMode = true
 }) => {
   const [copiedField, setCopiedField] = useState<string | null>(null);
+
+  // Track if user clicked "Write My Own" to dismiss suggestion for current input
+  const [dismissedEnSuggestion, setDismissedEnSuggestion] = useState(false);
+  const [dismissedMlSuggestion, setDismissedMlSuggestion] = useState(false);
 
   const copyToClipboard = (text: string, identifier: string) => {
     navigator.clipboard.writeText(text);
@@ -37,22 +44,50 @@ export const BilingualResults: React.FC<BilingualResultsProps> = ({
   const isEnWithin = enHeadLen <= headlineLimit;
   const isMlWithin = mlHeadLen <= headlineLimit;
 
+  // Compute shorter headline suggestions
+  const suggestedEnHeadline = generateShorterHeadline(english.headline, 'english', headlineLimit, english.summary);
+  const suggestedMlHeadline = generateShorterHeadline(malayalam.headline, 'malayalam', headlineLimit, malayalam.summary);
+
+  // Reset dismiss state if user edits to a new string
+  useEffect(() => {
+    if (isEnWithin) {
+      setDismissedEnSuggestion(false);
+    }
+  }, [english.headline, headlineLimit, isEnWithin]);
+
+  useEffect(() => {
+    if (isMlWithin) {
+      setDismissedMlSuggestion(false);
+    }
+  }, [malayalam.headline, headlineLimit, isMlWithin]);
+
+  // Handle accepting suggestions
+  const handleApplyEnSuggestion = () => {
+    onUpdateEnglish('headline', suggestedEnHeadline);
+    setDismissedEnSuggestion(false);
+  };
+
+  const handleApplyMlSuggestion = () => {
+    onUpdateMalayalam('headline', suggestedMlHeadline);
+    setDismissedMlSuggestion(false);
+  };
+
   return (
     <div className="bg-white rounded-2xl border border-slate-200 shadow-xs p-5 sm:p-6 transition-all">
       
-      {/* Stage Header */}
+      {/* Section 2 Header */}
       <div className="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-slate-100">
         <div>
           <div className="flex items-center space-x-2.5">
             <span className="flex items-center justify-center w-7 h-7 rounded-lg bg-manorama-red text-white text-xs font-black">
-              3
+              2
             </span>
             <h2 className="text-lg sm:text-xl font-bold text-slate-900 tracking-tight">
-              Review & Edit Content
+              AI Results & Editor
             </h2>
           </div>
           <p className="text-xs sm:text-sm text-slate-500 mt-1 pl-9.5">
-            Refine headlines, summaries, and full translations. Edits propagate immediately to all publication previews and tickers.
+            Refine headlines, summaries, and full translations. Smart alternative suggestions are automatically generated when limits are exceeded.
           </p>
         </div>
 
@@ -80,7 +115,11 @@ export const BilingualResults: React.FC<BilingualResultsProps> = ({
             <div className="relative">
               <select
                 value={headlineLimit}
-                onChange={(e) => setHeadlineLimit(Number(e.target.value))}
+                onChange={(e) => {
+                  setHeadlineLimit(Number(e.target.value));
+                  setDismissedEnSuggestion(false);
+                  setDismissedMlSuggestion(false);
+                }}
                 className="font-bold bg-transparent text-slate-900 pr-4 appearance-none focus:outline-none cursor-pointer"
               >
                 <option value={40}>40 chars</option>
@@ -120,17 +159,28 @@ export const BilingualResults: React.FC<BilingualResultsProps> = ({
               </span>
             </div>
 
-            <span className="text-xs text-slate-400">
-              {headlineLimit - enHeadLen >= 0 ? `${headlineLimit - enHeadLen} chars left` : `${Math.abs(headlineLimit - enHeadLen)} chars over limit`}
+            <span
+              className={`text-xs font-semibold px-2 py-0.5 rounded-md ${
+                isEnWithin
+                  ? 'bg-emerald-100 text-emerald-800'
+                  : 'bg-red-100 text-red-800'
+              }`}
+            >
+              {isEnWithin ? '✓ Within Limit' : `⚠️ ${enHeadLen - headlineLimit} chars over`}
             </span>
           </div>
 
           {/* English Headline */}
           <div>
             <div className="flex items-center justify-between mb-1.5">
-              <label className="text-xs font-bold text-slate-700">
-                Headline (English)
-              </label>
+              <div className="flex items-center space-x-2">
+                <label className="text-xs font-bold text-slate-700">
+                  Headline (English)
+                </label>
+                <span className="text-[11px] text-slate-400 font-mono">
+                  ({enHeadLen}/{headlineLimit} chars)
+                </span>
+              </div>
               <button
                 type="button"
                 onClick={() => copyToClipboard(english.headline, 'en-head')}
@@ -141,22 +191,74 @@ export const BilingualResults: React.FC<BilingualResultsProps> = ({
                 <span className="text-[11px]">Copy</span>
               </button>
             </div>
+            
             <input
               type="text"
               value={english.headline}
-              onChange={(e) => onUpdateEnglish('headline', e.target.value)}
-              className={`w-full px-3.5 py-2.5 text-sm font-semibold rounded-lg border bg-white focus:outline-none focus:ring-2 ${
+              onChange={(e) => {
+                onUpdateEnglish('headline', e.target.value);
+                setDismissedEnSuggestion(false);
+              }}
+              className={`w-full px-3.5 py-2.5 text-sm font-semibold rounded-lg border bg-white focus:outline-none focus:ring-2 transition-all ${
                 isEnWithin
                   ? 'border-slate-300 focus:ring-blue-500/20 focus:border-blue-500 text-slate-900'
-                  : 'border-red-400 ring-2 ring-red-100 text-red-950 bg-red-50/30'
+                  : 'border-red-400 ring-2 ring-red-100 text-red-950 bg-red-50/20'
               }`}
               placeholder="Enter English headline..."
             />
+
+            {/* Warning Message when limit exceeded */}
             {!isEnWithin && (
-              <p className="text-[11px] text-red-600 mt-1 flex items-center space-x-1">
-                <AlertTriangle className="w-3 h-3 shrink-0" />
-                <span>Headline exceeds character budget by {enHeadLen - headlineLimit} characters.</span>
+              <p className="text-[11px] text-red-600 mt-1.5 flex items-center space-x-1 font-medium">
+                <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
+                <span>Headline exceeds character budget by {enHeadLen - headlineLimit} characters ({enHeadLen}/{headlineLimit} chars).</span>
               </p>
+            )}
+
+            {/* Smart Shorter Headline Suggestion Box */}
+            {!isEnWithin && !dismissedEnSuggestion && suggestedEnHeadline && (
+              <div className="mt-3 p-3.5 rounded-xl bg-gradient-to-br from-amber-50 to-orange-50/60 border border-amber-200/90 shadow-xs space-y-2.5 animate-fadeIn">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-1.5 text-xs font-bold text-amber-900">
+                    <Sparkles className="w-4 h-4 text-amber-600" />
+                    <span>Suggested Shorter Headline</span>
+                  </div>
+                  <div className="flex items-center space-x-1.5">
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200">
+                      {suggestedEnHeadline.length}/{headlineLimit} chars (Within Limit ✓)
+                    </span>
+                    <span className="text-[10px] font-semibold text-slate-400">
+                      {isDemoMode ? 'Demo Suggestion' : 'AI Suggestion'}
+                    </span>
+                  </div>
+                </div>
+
+                {/* The Suggested Headline Text */}
+                <div className="p-2.5 rounded-lg bg-white border border-amber-200 text-sm font-bold text-slate-900 shadow-2xs">
+                  "{suggestedEnHeadline}"
+                </div>
+
+                {/* Two Clear Options */}
+                <div className="flex items-center justify-between pt-1">
+                  <button
+                    type="button"
+                    onClick={() => setDismissedEnSuggestion(true)}
+                    className="inline-flex items-center space-x-1 px-3 py-1.5 text-xs font-semibold text-slate-600 hover:text-slate-900 hover:bg-amber-100/60 rounded-lg transition-colors"
+                  >
+                    <PenLine className="w-3.5 h-3.5 text-slate-500" />
+                    <span>Write My Own</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={handleApplyEnSuggestion}
+                    className="inline-flex items-center space-x-1.5 px-3.5 py-1.5 bg-manorama-red hover:bg-manorama-darkRed text-white text-xs font-bold rounded-lg shadow-xs transition-all active:scale-95"
+                  >
+                    <Check className="w-3.5 h-3.5" />
+                    <span>Use Suggested Headline</span>
+                  </button>
+                </div>
+              </div>
             )}
           </div>
 
@@ -238,17 +340,28 @@ export const BilingualResults: React.FC<BilingualResultsProps> = ({
               </span>
             </div>
 
-            <span className="text-xs text-slate-400 font-ml">
-              {headlineLimit - mlHeadLen >= 0 ? `${headlineLimit - mlHeadLen} അക്ഷരങ്ങൾ ബാക്കി` : `${Math.abs(headlineLimit - mlHeadLen)} അക്ഷരങ്ങൾ അധികം`}
+            <span
+              className={`text-xs font-semibold px-2 py-0.5 rounded-md font-ml ${
+                isMlWithin
+                  ? 'bg-emerald-100 text-emerald-800'
+                  : 'bg-red-100 text-red-800'
+              }`}
+            >
+              {isMlWithin ? '✓ പരിധിക്കുള്ളിൽ' : `⚠️ ${mlHeadLen - headlineLimit} അക്ഷരങ്ങൾ അധികം`}
             </span>
           </div>
 
           {/* Malayalam Headline */}
           <div>
             <div className="flex items-center justify-between mb-1.5">
-              <label className="text-xs font-bold text-slate-700 font-ml">
-                തലക്കെട്ട് (Malayalam Headline)
-              </label>
+              <div className="flex items-center space-x-2">
+                <label className="text-xs font-bold text-slate-700 font-ml">
+                  തലക്കെട്ട് (Malayalam Headline)
+                </label>
+                <span className="text-[11px] text-slate-400 font-mono">
+                  ({mlHeadLen}/{headlineLimit} chars)
+                </span>
+              </div>
               <button
                 type="button"
                 onClick={() => copyToClipboard(malayalam.headline, 'ml-head')}
@@ -259,22 +372,74 @@ export const BilingualResults: React.FC<BilingualResultsProps> = ({
                 <span className="text-[11px]">Copy</span>
               </button>
             </div>
+            
             <input
               type="text"
               value={malayalam.headline}
-              onChange={(e) => onUpdateMalayalam('headline', e.target.value)}
-              className={`w-full px-3.5 py-2.5 text-sm font-ml font-bold rounded-lg border bg-white focus:outline-none focus:ring-2 ${
+              onChange={(e) => {
+                onUpdateMalayalam('headline', e.target.value);
+                setDismissedMlSuggestion(false);
+              }}
+              className={`w-full px-3.5 py-2.5 text-sm font-ml font-bold rounded-lg border bg-white focus:outline-none focus:ring-2 transition-all ${
                 isMlWithin
                   ? 'border-slate-300 focus:ring-manorama-red/20 focus:border-manorama-red text-slate-900'
-                  : 'border-red-400 ring-2 ring-red-100 text-red-950 bg-red-50/30'
+                  : 'border-red-400 ring-2 ring-red-100 text-red-950 bg-red-50/20'
               }`}
               placeholder="മലയാളം തലക്കെട്ട് നൽകുക..."
             />
+
+            {/* Warning Message when limit exceeded */}
             {!isMlWithin && (
-              <p className="text-[11px] text-red-600 mt-1 flex items-center space-x-1 font-ml">
-                <AlertTriangle className="w-3 h-3 shrink-0" />
-                <span>തലക്കെട്ട് അനുവദനീയമായ പരിധിയേക്കാൾ {mlHeadLen - headlineLimit} അക്ഷരങ്ങൾ കൂടുതലാണ്.</span>
+              <p className="text-[11px] text-red-600 mt-1.5 flex items-center space-x-1 font-ml font-medium">
+                <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
+                <span>തലക്കെട്ട് അനുവദനീയമായ പരിധിയേക്കാൾ {mlHeadLen - headlineLimit} അക്ഷരങ്ങൾ കൂടുതലാണ് ({mlHeadLen}/{headlineLimit} chars).</span>
               </p>
+            )}
+
+            {/* Smart Shorter Headline Suggestion Box */}
+            {!isMlWithin && !dismissedMlSuggestion && suggestedMlHeadline && (
+              <div className="mt-3 p-3.5 rounded-xl bg-gradient-to-br from-amber-50 to-orange-50/60 border border-amber-200/90 shadow-xs space-y-2.5 animate-fadeIn">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-1.5 text-xs font-bold text-amber-900 font-ml">
+                    <Sparkles className="w-4 h-4 text-amber-600" />
+                    <span>നിർദ്ദേശിക്കുന്ന ചുരുങ്ങിയ തലക്കെട്ട് (Shorter Alternative)</span>
+                  </div>
+                  <div className="flex items-center space-x-1.5">
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200 font-ml">
+                      {suggestedMlHeadline.length}/{headlineLimit} chars (പരിധിക്കുള്ളിൽ ✓)
+                    </span>
+                    <span className="text-[10px] font-semibold text-slate-400 font-sans">
+                      {isDemoMode ? 'Demo Suggestion' : 'AI Suggestion'}
+                    </span>
+                  </div>
+                </div>
+
+                {/* The Suggested Headline Text */}
+                <div className="p-2.5 rounded-lg bg-white border border-amber-200 text-sm font-bold text-slate-900 font-ml shadow-2xs">
+                  "{suggestedMlHeadline}"
+                </div>
+
+                {/* Two Clear Options */}
+                <div className="flex items-center justify-between pt-1">
+                  <button
+                    type="button"
+                    onClick={() => setDismissedMlSuggestion(true)}
+                    className="inline-flex items-center space-x-1 px-3 py-1.5 text-xs font-semibold text-slate-600 hover:text-slate-900 hover:bg-amber-100/60 rounded-lg transition-colors font-ml"
+                  >
+                    <PenLine className="w-3.5 h-3.5 text-slate-500" />
+                    <span>Write My Own (സ്വന്തമായി തിരുത്തുക)</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={handleApplyMlSuggestion}
+                    className="inline-flex items-center space-x-1.5 px-3.5 py-1.5 bg-manorama-red hover:bg-manorama-darkRed text-white text-xs font-bold rounded-lg shadow-xs transition-all active:scale-95 font-ml"
+                  >
+                    <Check className="w-3.5 h-3.5" />
+                    <span>Use Suggested Headline</span>
+                  </button>
+                </div>
+              </div>
             )}
           </div>
 

@@ -3,15 +3,13 @@ import { Header } from './components/Header';
 import { ArticleInput } from './components/ArticleInput';
 import { AIProcessingStage } from './components/AIProcessingStage';
 import { BilingualResults } from './components/BilingualResults';
-import { PublicationPreview } from './components/PublicationPreview';
 import { KeyInformation } from './components/KeyInformation';
-import { JsonExport } from './components/JsonExport';
+import { PublicationPreview } from './components/PublicationPreview';
 import { NewsTicker } from './components/NewsTicker';
 import { SettingsModal } from './components/SettingsModal';
 import { SAMPLE_ARTICLES } from './data/sampleArticles';
 import {
   SupportedLanguage,
-  NewsroomJSONOutput,
   BilingualContent,
   PreviewTab,
   ReviewStatus
@@ -137,6 +135,12 @@ export const App: React.FC = () => {
       if (result.metadata?.category) {
         setCurrentCategory(result.metadata.category);
       }
+
+      // Automatically scroll to Section 2 (AI Results & Editor) after processing
+      const resultsEl = document.getElementById('section-results');
+      if (resultsEl) {
+        resultsEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
     } catch (err: any) {
       setErrorMessage(err.message || 'An error occurred while processing article.');
     } finally {
@@ -153,94 +157,23 @@ export const App: React.FC = () => {
     setEnglishContent(prev => ({ ...prev, [field]: val }));
   };
 
-  // Build reactive JSON payload matching Section 4 specification
-  const currentJsonPayload: NewsroomJSONOutput = useMemo(() => {
-    return {
-      sourceLanguage: sourceLang,
-      translatedLanguage: targetLang,
-      english: {
-        headline: englishContent.headline,
-        summary: englishContent.summary,
-        article: englishContent.article
-      },
-      malayalam: {
-        headline: malayalamContent.headline,
-        summary: malayalamContent.summary,
-        article: malayalamContent.article
-      },
-      entities: {
-        people: entities.people,
-        places: entities.places,
-        organisations: entities.organisations
-      },
-      keywords: keywords,
-      reviewStatus: reviewStatus
-    };
-  }, [
-    sourceLang,
-    targetLang,
-    englishContent,
-    malayalamContent,
-    entities,
-    keywords,
-    reviewStatus
-  ]);
-
   return (
-    <div className="min-h-screen bg-[#F8FAFC] text-slate-800 flex flex-col font-sans">
+    <div className="min-h-screen bg-[#F8FAFC] text-slate-800 flex flex-col font-sans scroll-smooth">
       
-      {/* Brand Header */}
+      {/* Fixed Sticky Header with Section Navigation Bar */}
       <Header
         isDemoMode={!apiKey}
         onOpenSettings={() => setIsSettingsOpen(true)}
         onResetToSample={handleLoadSampleEnglish}
       />
 
-      {/* Main Single Workflow Container */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-7 space-y-7">
+      {/* Main Sequential Workspace Container */}
+      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-8">
         
-        {/* Workflow Visual Stepper Bar */}
-        <div className="bg-white border border-slate-200 rounded-2xl p-3 sm:p-4 shadow-xs">
-          <div className="flex items-center justify-between overflow-x-auto text-xs font-bold text-slate-600 space-x-2 sm:space-x-4">
-            
-            <div className="flex items-center space-x-2 text-manorama-red shrink-0">
-              <span className="w-6 h-6 rounded-full bg-manorama-red text-white flex items-center justify-center text-xs font-black">1</span>
-              <span>Input Article</span>
-            </div>
-            
-            <span className="text-slate-300">→</span>
-
-            <div className="flex items-center space-x-2 text-slate-800 shrink-0">
-              <span className="w-6 h-6 rounded-full bg-slate-100 border border-slate-300 text-slate-700 flex items-center justify-center text-xs font-black">2</span>
-              <span>AI Processing</span>
-            </div>
-
-            <span className="text-slate-300">→</span>
-
-            <div className="flex items-center space-x-2 text-slate-800 shrink-0">
-              <span className="w-6 h-6 rounded-full bg-slate-100 border border-slate-300 text-slate-700 flex items-center justify-center text-xs font-black">3</span>
-              <span>Review & Edit</span>
-            </div>
-
-            <span className="text-slate-300">→</span>
-
-            <div className="flex items-center space-x-2 text-slate-800 shrink-0">
-              <span className="w-6 h-6 rounded-full bg-slate-100 border border-slate-300 text-slate-700 flex items-center justify-center text-xs font-black">4</span>
-              <span>Publishing Previews</span>
-            </div>
-
-            <span className="text-slate-300">→</span>
-
-            <div className="flex items-center space-x-2 text-slate-800 shrink-0">
-              <span className="w-6 h-6 rounded-full bg-slate-100 border border-slate-300 text-slate-700 flex items-center justify-center text-xs font-black">5</span>
-              <span>JSON Export</span>
-            </div>
-
-          </div>
-        </div>
-
-        {/* STAGE 1: Article Input */}
-        <section id="stage-1-input">
+        {/* ============================================================ */}
+        {/* SECTION 1: ARTICLE INPUT */}
+        {/* ============================================================ */}
+        <section id="section-input" className="scroll-mt-28 space-y-4">
           <ArticleInput
             articleText={articleText}
             setArticleText={setArticleText}
@@ -254,10 +187,8 @@ export const App: React.FC = () => {
             isProcessing={isProcessing}
             errorMessage={errorMessage}
           />
-        </section>
 
-        {/* STAGE 2: AI Processing State & Architecture */}
-        <section id="stage-2-processing">
+          {/* AI Processing Milestone / Demo Status */}
           <AIProcessingStage
             isProcessing={isProcessing}
             isDemoMode={!apiKey}
@@ -267,8 +198,10 @@ export const App: React.FC = () => {
           />
         </section>
 
-        {/* STAGE 3: Review & Edit (Side-by-Side English & Malayalam) */}
-        <section id="stage-3-review-edit">
+        {/* ============================================================ */}
+        {/* SECTION 2: AI RESULTS & EDITOR */}
+        {/* ============================================================ */}
+        <section id="section-results" className="scroll-mt-28">
           <BilingualResults
             malayalam={malayalamContent}
             english={englishContent}
@@ -278,11 +211,25 @@ export const App: React.FC = () => {
             setHeadlineLimit={setHeadlineLimit}
             reviewStatus={reviewStatus}
             setReviewStatus={setReviewStatus}
+            isDemoMode={!apiKey}
           />
         </section>
 
-        {/* STAGE 4: Publication Previews (5 Tabs with Exact Logos) */}
-        <section id="stage-4-previews">
+        {/* ============================================================ */}
+        {/* SECTION 3: KEY INFORMATION */}
+        {/* ============================================================ */}
+        <section id="section-key-info" className="scroll-mt-28">
+          <KeyInformation
+            entities={entities}
+            keywords={keywords}
+            isDemoEngine={processingEngine === 'demo-heuristics'}
+          />
+        </section>
+
+        {/* ============================================================ */}
+        {/* SECTION 4: PUBLICATION PREVIEWS */}
+        {/* ============================================================ */}
+        <section id="section-previews" className="scroll-mt-28">
           <PublicationPreview
             activeTab={activePreviewTab}
             setActiveTab={setActivePreviewTab}
@@ -294,25 +241,10 @@ export const App: React.FC = () => {
           />
         </section>
 
-        {/* COMPACT SECONDARY: AI-Extracted Key Information */}
-        <section id="stage-entities-metadata">
-          <KeyInformation
-            entities={entities}
-            keywords={keywords}
-            isDemoEngine={processingEngine === 'demo-heuristics'}
-          />
-        </section>
-
-        {/* STAGE 5: Structured JSON Export */}
-        <section id="stage-5-export">
-          <JsonExport
-            jsonData={currentJsonPayload}
-            onUpdateReviewStatus={setReviewStatus}
-          />
-        </section>
-
+        {/* ============================================================ */}
         {/* LIVE SCROLLING NEWS TICKER */}
-        <section id="stage-news-ticker" className="pt-2">
+        {/* ============================================================ */}
+        <section id="section-ticker" className="pt-2">
           <NewsTicker
             malayalamHeadline={malayalamContent.headline}
             englishHeadline={englishContent.headline}
@@ -323,7 +255,7 @@ export const App: React.FC = () => {
       </main>
 
       {/* Editorial Newsroom Footer */}
-      <footer className="mt-10 border-t border-slate-200 bg-white py-6 text-center text-xs text-slate-500">
+      <footer className="mt-12 border-t border-slate-200 bg-white py-6 text-center text-xs text-slate-500">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-3">
           <div className="flex items-center space-x-2">
             <span className="font-bold text-slate-800">NewsBridge AI</span>
